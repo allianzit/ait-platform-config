@@ -1,5 +1,5 @@
 # Configuracion de metricas de administracion
-management.port: 9012
+management.port: 9013
 # Puerto por defecto en donde escuchara el servidor
 server.port: 9052
 spring:

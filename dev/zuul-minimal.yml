@@ -1,0 +1,64 @@
+info:
+  Description: Edge Zuul Server
+  Administrator: Reverse proxy that redirect requests to the microservices, based on discovery server
+  
+# Configuracion de metricas de administracion (el puerto debe NO debe exponerse a internet)
+management.port: 8070
+
+security:
+  # Consiguracion del servidor de autenticacion y autorizacion
+  oauth2:
+    client:
+      clientId: ait-client
+      clientSecret: 3a84efef-3cf5-4266-be2c-7801d9ebb598
+      accessTokenUri: ${ait.uaaUri}token
+      userAuthorizationUri: ${ait.uaaUri}auth
+      authenticationScheme: header
+      clientAuthenticationScheme: header
+# Configuracion de contexto
+server:
+  connection-timeout: 40000
+  port: 8081
+  context-path: /
+
+# Configuracion del certificado SSL
+  ssl:
+    enabled: true
+    key-store: ${AIT_KEY_STORE}
+    key-store-password: '{cipher}c5f9a001d091bbd8e977ed392ca5c3e2ad5a2820b907052605fc1cb72eaf8600'
+    keyStoreType: PKCS12
+    keyAlias: ${AIT_HOSTNAME}
+    key-password: '{cipher}c5f9a001d091bbd8e977ed392ca5c3e2ad5a2820b907052605fc1cb72eaf8600'
+
+# Configuracion de conexion con el discovery service
+eureka:
+  instance:
+    securePortEnabled: true
+    securePort: ${server.port}
+    secure-health-check-url: https://${eureka.instance.hostname}:${management.port}/health
+#configuracion de spring    
+spring:
+  http.multipart.max-file-size: 100Mb
+  aop.proxy-target-class: true
+
+# mapeo de rutas a servicios
+zuul:
+  sensitive-headers: Cookie,Set-Cookie 
+  host:
+    connect-timeout-millis: 5000
+    socket-timeout-millis: 60000 #60 segundos
+  add-proxy-headers: true
+  routes:
+    common:
+      path: /common/**
+      url: common
+    resource:
+      path: /resource/**
+      url: http://localhost:9000      
+#configuracion para enlazar el servidor con Apache HTTP
+tomcat:
+  ajp:
+    port: 8010
+    remoteauthentication: false 
+    enabled: true  
+    jvmroute: route1

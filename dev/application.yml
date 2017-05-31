@@ -1,0 +1,136 @@
+#informacion propia de la plataforma
+ait:
+  uaaUri: https://localhost:8443/auth/realms/ait-platform/protocol/openid-connect/
+
+security:
+#   Datos del usuario generico para acceder a endpoints protegidos (en caso de ser solicitado)  
+  user:
+    name: mincit
+    password: '{cipher}6260f5a4e9d1dc3f6e153e1c0f22bfc8b9ab5b6168da108f38c80715ee1169d7164051f1c7c84f7d2a1e6592c4041bd6'
+  oauth2.resource.userInfoUri: ${ait.uaaUri}userinfo
+
+# Se deshabilita la seguridad asumiendo que solo se puede acceder al puerto desde ciertas ip's  
+management.security.enabled: false
+
+# Habilita el acceso a los endpoints de metricas omitiendo las validaciones de seguridad
+endpoints:
+  sensitive: false
+  metrics.enabled: true
+  auditevents.enabled: true
+      
+logging:
+  file: ${AIT_LOG_PATH}/${spring.application.name}
+  level:
+    ROOT: WARN
+    com.ait.platform: TRACE
+    org.springframework: DEBUG
+    org.springframework.security: WARN
+    org.hibernate: WARN
+    org.apache: WARN
+    com.netflix: WARN
+    sun.rmi: WARN
+    com.sun.jmx.interceptor: WARN
+    io.searchbox: WARN
+    javax.management: WARN
+    org.springframework.data.redis.listener.RedisMessageListenerContainer: OFF
+    
+spring:
+  # Identificador del servidor para ser usado en los mensajes jmx (NO CAMBIAR)
+  jmx.default-domain: ${spring.application.name}
+  
+  # Ip o nombre del servidor redis (DEBE SER EL MISMO PARA TODOS LOS SERVIDORES)
+  redis.host: ${AIT_REDIS_HOST}
+  
+  # Parametros necesarios para acceder a la base de datos
+  datasource:
+    url: jdbc:oracle:thin:@localhost:1521:xe
+    driverClassName: oracle.jdbc.driver.OracleDriver
+    test-on-borrow: true 
+    testWhileIdle: true
+    validationQuery: select 1 from dual
+    timeBetweenEvictionRunsMillis: 360000   
+
+  jpa:
+    database-platform: org.hibernate.dialect.Oracle10gDialect
+
+    # Indica si se desea crear el ddl de la BD al iniciar el servidor    
+    generate-ddl: true
+    # Indica si se quiere imprimir en pantalla las consultas generadas por el framework
+    show-sql: true
+    # Indica si se quieren formatear las consultas sql impresas para entenderlas mejor
+    format-sql: true
+    hibernate.ddl-auto: create
+    # Propiedades adicionales usadas al conectarse con la base de datos
+    properties:
+      hibernate:
+        jdbc.batch_size: 30
+        hbm2ddl:
+          # Si "hibernate.ddl-auto" es igual a "create", se ejecutara el siguiente script luego de creada la BD
+          import_files: ${spring.application.name}-init-data.sql
+          import_files_sql_extractor: org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor
+        id.new_generator_mappings: true
+        
+#        Configuracion para creacion de indices de busquedas
+        search:
+          default:
+            #Select Elasticsearch as the backend
+            indexmanager: elasticsearch
+            elasticsearch:
+              #Hostname and port for Elasticsearch
+              host: ${AIT_ELASTICSEARCH_URI}
+              
+              #Selects the index creation strategy
+              index_schema_management_strategy: CREATE
+              #Maximum time to wait for the indexes to become available before failing (in ms)
+              index_management_wait_timeout: 10000
+              #Status an index must at least have in order for Hibernate Search to work with it (one of "green", "yellow" or "red")
+              required_index_status: yellow
+              #Whether to perform an explicit refresh after a set of operations has been executed against a specific index (true or false)
+              refresh_after_write: false
+#          elasticsearch:
+#            #When scrolling, the minimum number of previous results kept in memory at any time
+#            scroll_backtracking_window_size
+#            #When scrolling, the number of results fetched by each Elasticsearch call
+#            scroll_fetch_size
+#            #When scrolling, the maximum duration ScrollableResults will be usable if no other results are fetched from Elasticsearch, in seconds
+#            scroll_timeout
+
+# Configuracion de conexion con el servidor eureka (DE SER NECESARIO, SE SUGIERE CAMBIAR UNICAMENTE LOS PUERTOS)
+eureka:
+  password: '{cipher}6260f5a4e9d1dc3f6e153e1c0f22bfc8b9ab5b6168da108f38c80715ee1169d7164051f1c7c84f7d2a1e6592c4041bd6'
+  # Url del servidor eureka (USA LA VARIABLE DE ENTORNO AIT_DISCOVERY_HOST)
+  client.serviceUrl.defaultZone: http://user:${eureka.password}@${AIT_DISCOVERY_HOST}:8761/eureka/
+  instance:
+  
+    # Variable que le indica a eureka que debe ubicar los servidores por nombre en lugar de IP
+    preferIpAddress: false
+    
+    # Nombre de la maquina en donde se ejecuta el servidor
+    hostname: ${AIT_HOSTNAME}
+    
+    # Url de metricas del servidor core
+    healthCheckUrl: http://${eureka.instance.hostname}:${management.port}/health
+    
+# Configuracion de comunicacion entre servidores
+hystrix:
+  shareSecurityContext: true  
+  threadpool.default:
+    coreSize: 30
+    maxQueueSize: 30
+  
+  command.default.execution.isolation:
+    # Maximo tiempo de espera cuando se llama a otro servidor de backend
+    thread.timeoutInMilliseconds: 60000
+    
+    # Esquema de comunicacion por hilos por defecto, lo cual permite mejor comunicacion (NO CAMBIAR) 
+    strategy: THREAD
+
+# Configuracion de timeouts
+ribbon:
+  # Maximo tiempo permitido para establecer conexion con el otro servidor
+  ConnectTimeout: 10000
+  # Indica cuantas veces se reintenta llamar a cada microservicio (SI SE AUMENTA SE PUEDEN TENER FALLOS A NIVEL DE BD. NO MOVER)
+  MaxAutoRetries: 0
+  
+  # Maximo tiempo permitido para romper la comunicacion con el otro servidor (incluyendo tiempo de comunicacion, ejecucion y respuesta)
+  ReadTimeout: 12000

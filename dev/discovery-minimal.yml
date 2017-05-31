@@ -1,0 +1,30 @@
+info:
+  Description: Service discovery
+  Administrator: To access the Administrator console go to /admin 
+
+# Configuracion de contexto y seguridad
+server.port: 8761
+management.port: ${server.port}
+security.basic.enabled: true
+  
+#configuracion de spring
+spring:
+# solucion temporal a bug encontrado en spring-framework
+  mvc:
+    async:
+      request-timeout: -1  
+  #configuracion de spring admin
+  boot:
+    admin:
+      context-path: /admin
+      routes.endpoints: env, metrics, trace, dump, jolokia, info, configprops, trace, logfile, refresh, liquibase, loggers, hystrix.stream,turbine.stream
+# Configuracion de conexion con el discovery service
+eureka:
+  environment: prod
+  instance:
+    homePageUrl: http://${eureka.instance.hostname}:${server.port}/
+    statusPageUrl: http://${eureka.instance.hostname}:${server.port}/info
+    # Configuracion de autoregistro
+  client:
+    registerWithEureka: true
+    fetchRegistry: true

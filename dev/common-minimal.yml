@@ -1,0 +1,8 @@
+# Configuracion de metricas de administracion
+management.port: 9012
+# Puerto por defecto en donde escuchara el servidor
+server.port: 9052
+spring:
+  datasource:
+    username: AIT
+    password: AIT2017

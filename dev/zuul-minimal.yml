@@ -52,9 +52,6 @@ zuul:
     common:
       path: /common/**
       url: common
-    resource:
-      path: /resource/**
-      url: http://localhost:9000      
 #configuracion para enlazar el servidor con Apache HTTP
 tomcat:
   ajp:

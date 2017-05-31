@@ -5,4 +5,4 @@ server.port: 9052
 spring:
   datasource:
     username: AIT
-    password: AIT2017
+    password: MCIT2017

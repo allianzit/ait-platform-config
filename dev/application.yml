@@ -59,7 +59,7 @@ spring:
     show-sql: true
     # Indica si se quieren formatear las consultas sql impresas para entenderlas mejor
     format-sql: true
-    hibernate.ddl-auto: create
+    hibernate.ddl-auto: update
     # Propiedades adicionales usadas al conectarse con la base de datos
     properties:
       hibernate:
